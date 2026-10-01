@@ -1,0 +1,19 @@
+name: Release
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish the version in manifest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(jq -r .version manifest.json)
+          if gh release view "$v" >/dev/null 2>&1; then
+            gh release upload "$v" main.js manifest.json --clobber
+          else
+            gh release create "$v" main.js manifest.json --title "$v" --target "$GITHUB_SHA" --notes "BetterSync plugin $v"
+          fi
